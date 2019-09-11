@@ -1,0 +1,15 @@
+﻿<Window x:Class="WpfClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfClient"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <ListView Name="OutputMessage" HorizontalAlignment="Left" Height="214" Margin="95,69,0,0" VerticalAlignment="Top" Width="367"/>
+        <TextBox Name="InputMessage" HorizontalAlignment="Left" Height="30" Margin="95,354,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="367"/>
+        <Button Name="SendMessage" Content="send message" Margin="510,342,125.6,36" Click="SendMessage_Click"></Button>
+        <Button Margin="510,69,120.6,275" Content="Connect to server" Click="ConnectServer"></Button>
+    </Grid>
+</Window>
