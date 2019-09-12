@@ -44,7 +44,7 @@ namespace Chat
             while (true)
             {
                 NetworkStream stream = client.GetStream();
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[32768];
                 int byte_count;
 
                 try
@@ -64,7 +64,8 @@ namespace Chat
 
                 string data = Encoding.ASCII.GetString(buffer, 0, byte_count);
                 broadcast(buffer);
-                Console.WriteLine(data);
+                if(data.Length < 20000)
+                    Console.WriteLine(data);
             }
 
             lock (_lock) list_clients.Remove(id);

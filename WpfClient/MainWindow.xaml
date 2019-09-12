@@ -7,9 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <ListView Name="OutputMessage" HorizontalAlignment="Left" Height="214" Margin="95,69,0,0" VerticalAlignment="Top" Width="367"/>
+        <ListBox Name="OutputMessage" HorizontalAlignment="Left" Height="214" Margin="95,69,0,0" VerticalAlignment="Top" Width="367" SelectionChanged="Selected"/>
+        
+
         <TextBox Name="InputMessage" HorizontalAlignment="Left" Height="30" Margin="95,354,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="367"/>
         <Button Name="SendMessage" Content="send message" Margin="510,342,125.6,36" Click="SendMessage_Click"></Button>
         <Button Margin="510,69,120.6,275" Content="Connect to server" Click="ConnectServer"></Button>
+        <Button Name="FileUpload" Margin="30,355,714.6,36" Content="Upload" Click="UploadFile"></Button>
     </Grid>
 </Window>

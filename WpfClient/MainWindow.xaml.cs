@@ -1,12 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
+﻿using Microsoft.Win32;
+using System;
 using System.Windows;
-using System.Xml;
-using System.Xml.Linq;
+using System.IO;
+using System.Windows.Media;
 
 namespace WpfClient
 {
@@ -15,8 +11,12 @@ namespace WpfClient
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        NetworkStream ns;
+        ClientSide clientSide = new ClientSide();
+        static readonly object _lock = new object();
+        string userName = "";
+        string path = "";
+        string fileName = "";
+        string file;
         bool connected = false;
         int amountConnected = 0;
 
@@ -24,112 +24,97 @@ namespace WpfClient
         {
             InitializeComponent();
         }
+        public MainWindow(string username)
+        {
+            InitializeComponent();
+            this.userName = username;
+        }
         private void ConnectServer(object sender, RoutedEventArgs e)
         {
-            // Stops fro connecting multible times
+            // Stops from connecting multible times
             if (amountConnected > 0)
                 return;
-            // To do: add box to add custom ip
-            // Ip of the server
-            IPAddress ip = IPAddress.Parse("10.109.169.64");
-            int port = 5000;
-            TcpClient client = new TcpClient();
 
-            try
-            {
-                client.Connect(ip, port);
-                MessageBox.Show("client connected!!");
-            }
-            catch (Exception ee)
-            {
-                MessageBox.Show("Error " + ee.Message);
-            }
+            // Initialize our connection to serwer
+            clientSide.Initialize();
+            clientSide.MessageRecived += ReceiveData;
 
-            ns = client.GetStream();
-            Thread thread = new Thread(o => ReceiveData((TcpClient)o));
-
-            thread.Start(client);
             connected = true;
             amountConnected++;
         }
-
 
         private void SendMessage_Click(object sender, RoutedEventArgs e)
         {
             if (connected == false)
                 return;
 
-            // Getting byte[] from xml
-            Encoding encoding = Encoding.ASCII;
-            XElement element = new XElement("Root",
-                             new XElement("Name", "Steve"),
-                             new XElement("Time", DateTime.Now.ToString("t")));
-
-            byte[] buffer = ConvertXmlToByteArray(element, encoding);
-
-
-            ns.Write(buffer, 0, buffer.Length);
+            if (path == string.Empty)
+                clientSide.SendMessage(InputMessage.Text, userName);
+            else
+            {
+                clientSide.SendMessage(InputMessage.Text, userName,path, fileName);
+                path = "";
+                file = "";
+                fileName = "";
+            }
         }
 
-        void ReceiveData(TcpClient client)
+        void ReceiveData(object sender, HoldingVariable e)
         {
             if (connected == false)
                 return;
 
-            NetworkStream ns = client.GetStream();
-            byte[] receivedBytes = new byte[1024];
-            int byte_count;
-            string temp = string.Empty;
-            string name = string.Empty;
-            string time = string.Empty;
-            while ((byte_count = ns.Read(receivedBytes, 0, receivedBytes.Length)) > 0)
+            string temp = "";
+
+            // Receive values from serwer  
+            if (e.File.Length == 0)
             {
-                
-                XmlDocument el = ConvertByteArrayToXml(receivedBytes, Encoding.ASCII);
+                temp = string.Format("{0} by user {1}: {2}", e.Time, e.Name, e.Message);
+            }
+            else
+            {
+                file = e.File;
+                //OutputMessage.Foreground = Brushes.Blue;
+                temp = string.Format("{0} {1} send file {2} with message {3}", e.Time, e.Name,e.FileName, e.Message);
+            }
 
-                // Creates list of nodes inside of xml element between root
-                XmlNodeList both = el.SelectNodes("/Root");
-
-                foreach (XmlNode item in both)
-                {
-                    name = item["Name"].InnerText;
-                    time = item["Time"].InnerText;
-                }
-
-                temp = string.Format("{0} by user {1}",time,name);
-                
-                // Update list from another thread 
-                OutputMessage.Dispatcher.BeginInvoke(new Action(delegate ()
-                {
-                    // Insert item on top of the list
+            // Update list from another thread 
+            OutputMessage.Dispatcher.BeginInvoke(new Action(delegate ()
+            {
+                // Insert item on top of the list
+                lock (_lock)
                     OutputMessage.Items.Insert(0, temp);
-                }));
-            }
+
+              
+            }));
         }
 
-
-        byte[] ConvertXmlToByteArray(XElement xml, Encoding encoding)
+        private void UploadFile(object sender, RoutedEventArgs e)
         {
-            using (MemoryStream stream = new MemoryStream())
+            OpenFileDialog op = new OpenFileDialog();
+            op.Title = "select file";
+            op.Filter = "Exe file | *exe";
+            if (op.ShowDialog() == true)
             {
-                XmlWriterSettings settings = new XmlWriterSettings();
-                // Add formatting and other writer options here if desired
-                settings.Encoding = encoding;
-                settings.OmitXmlDeclaration = true; // No prolog
-                using (XmlWriter writer = XmlWriter.Create(stream, settings))
-                {
-                    xml.Save(writer);
-                }
-                return stream.ToArray();
+                path = op.FileName;
+                fileName = System.IO.Path.GetFileName(path);
             }
+            
         }
 
-        XmlDocument ConvertByteArrayToXml(byte[] data, Encoding encoding)
+        private void Selected(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            XmlDocument doc = new XmlDocument();
-            MemoryStream ms = new MemoryStream(data);
-            doc.Load(ms);
-            return doc;
+
+            string temp = OutputMessage.SelectedItem.ToString();
+            if (temp.Contains("file"))
+            {
+                byte[] buffer = Convert.FromBase64String(file);
+                SaveFileDialog save = new SaveFileDialog();
+                save.Filter = "Exe file |*.exe";
+                if (save.ShowDialog() == true)
+                    File.WriteAllBytes(save.FileName,buffer);
+            }
+
         }
     }
 }
