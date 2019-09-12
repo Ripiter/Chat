@@ -1,25 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
-using System.Net.Sockets;
-using System.Threading;
-using System.Diagnostics;
-using System.Net;
-using System.Xml.Linq;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Windows;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace WpfClient
 {
@@ -71,17 +58,15 @@ namespace WpfClient
         {
             if (connected == false)
                 return;
-            // Send byte[] from input
-            //byte[] buffer = Encoding.ASCII.GetBytes(InputMessage.Text);
 
             // Getting byte[] from xml
             Encoding encoding = Encoding.ASCII;
             XElement element = new XElement("Root",
                              new XElement("Name", "Steve"),
-                             new XElement("Time", DateTime.Now.ToString()));
+                             new XElement("Time", DateTime.Now.ToString("t")));
 
             byte[] buffer = ConvertXmlToByteArray(element, encoding);
-           
+
 
             ns.Write(buffer, 0, buffer.Length);
         }
@@ -94,31 +79,34 @@ namespace WpfClient
             NetworkStream ns = client.GetStream();
             byte[] receivedBytes = new byte[1024];
             int byte_count;
-            string temp;
+            string temp = string.Empty;
+            string name = string.Empty;
+            string time = string.Empty;
             while ((byte_count = ns.Read(receivedBytes, 0, receivedBytes.Length)) > 0)
             {
-                temp = Encoding.ASCII.GetString(receivedBytes, 0, byte_count);
-
-                // Test
                 
                 XmlDocument el = ConvertByteArrayToXml(receivedBytes, Encoding.ASCII);
+
+                // Creates list of nodes inside of xml element between root
+                XmlNodeList both = el.SelectNodes("/Root");
+
+                foreach (XmlNode item in both)
+                {
+                    name = item["Name"].InnerText;
+                    time = item["Time"].InnerText;
+                }
+
+                temp = string.Format("{0} by user {1}",time,name);
                 
-                var aStringBuilder = new StringBuilder(temp);
-                int a = temp.IndexOf("</Root>");
-                aStringBuilder.Remove(a, temp.Length - a );
-                temp = aStringBuilder.ToString();
-
-
-
                 // Update list from another thread 
                 OutputMessage.Dispatcher.BeginInvoke(new Action(delegate ()
                 {
                     // Insert item on top of the list
-                    OutputMessage.Items.Insert(0,temp);
+                    OutputMessage.Items.Insert(0, temp);
                 }));
             }
         }
-        
+
 
         byte[] ConvertXmlToByteArray(XElement xml, Encoding encoding)
         {
