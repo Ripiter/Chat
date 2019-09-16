@@ -27,7 +27,8 @@
         <Button Margin="510,69,120.6,275" Content="Connect to server" Click="ConnectServer"></Button>
         <Button Name="FileUpload" Margin="30,355,714.6,36" Content="Upload" Click="UploadFile"></Button>
         <Label Margin="510,283,125.6,68" Name="MessageDelay">
-            <TextBlock Height="69" Width="158">Slow down there cowboy<LineBreak/>Take a 5 sec break</TextBlock>
+            <TextBlock Height="69" Width="158">Slow down there cowboy<LineBreak/>Take a 3 sec break</TextBlock>
         </Label>
+        <Button Margin="10,389,673.6,5" Content="Record Message" FontSize="13" Click="OpenRecordMenu"></Button>
     </Grid>
 </Window>

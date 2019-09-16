@@ -1,0 +1,15 @@
+﻿<Window x:Class="WpfClient.RecordPage"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfClient"
+        mc:Ignorable="d"
+        Title="RecordPage" Height="450" Width="800">
+    <Grid>
+        <Button Content="Start Recordning" Margin="30,173,565.6,174" Click="StartRecording"></Button>
+        <Label Name="recordingLabel" Content="Recording" Margin="325,31,269.6,269" FontSize="23"></Label>
+        <Button Content="Stop Recordning" Margin="565,173,20.6,174" Click="StopRecording"></Button>
+        <Button Content="Listen to message " Margin="261,291,269.6,26" Click="Play"></Button>
+    </Grid>
+</Window>

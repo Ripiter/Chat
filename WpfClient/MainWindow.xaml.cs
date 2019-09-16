@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -165,6 +166,12 @@ namespace WpfClient
                 if (save.ShowDialog() == true)
                     System.IO.File.WriteAllBytes(save.FileName, buffer);
             }
+        }
+
+        private void OpenRecordMenu(object sender, RoutedEventArgs e)
+        {
+            RecordPage recordPage = new RecordPage();
+            recordPage.Show();
         }
     }
 
