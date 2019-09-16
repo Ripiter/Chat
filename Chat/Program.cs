@@ -64,8 +64,10 @@ namespace Chat
 
                 string data = Encoding.ASCII.GetString(buffer, 0, byte_count);
                 broadcast(buffer);
-                if(data.Length < 20000)
+                if(data.Length < 200)
                     Console.WriteLine(data);
+                else
+                    Console.WriteLine("File was send");
             }
 
             lock (_lock) list_clients.Remove(id);

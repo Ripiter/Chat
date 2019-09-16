@@ -7,12 +7,27 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <ListBox Name="OutputMessage" HorizontalAlignment="Left" Height="214" Margin="95,69,0,0" VerticalAlignment="Top" Width="367" SelectionChanged="Selected"/>
-        
+        <ListBox x:Name="OutputMessage" DisplayMemberPath="Name" Margin="81,87,331.6,119" SelectionChanged="Selected">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                            <Setter Property="Foreground" Value="Blue"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsHighlighted}" Value="False">
+                            <Setter Property="Foreground" Value="Black"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
 
         <TextBox Name="InputMessage" HorizontalAlignment="Left" Height="30" Margin="95,354,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="367"/>
-        <Button Name="SendMessage" Content="send message" Margin="510,342,125.6,36" Click="SendMessage_Click"></Button>
+        <RepeatButton Name="SendMessage" Content="sendmessage" Margin="510,342,125.6,36" Click="SendMessage_Click"></RepeatButton>
         <Button Margin="510,69,120.6,275" Content="Connect to server" Click="ConnectServer"></Button>
         <Button Name="FileUpload" Margin="30,355,714.6,36" Content="Upload" Click="UploadFile"></Button>
+        <Label Margin="510,283,125.6,68" Name="MessageDelay">
+            <TextBlock Height="69" Width="158">Slow down there cowboy<LineBreak/>Take a 5 sec break</TextBlock>
+        </Label>
     </Grid>
 </Window>

@@ -1,8 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Windows;
-using System.IO;
-using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace WpfClient
 {
@@ -13,22 +12,49 @@ namespace WpfClient
     {
         ClientSide clientSide = new ClientSide();
         static readonly object _lock = new object();
+        #region Variables 
         string userName = "";
         string path = "";
         string fileName = "";
         string file;
         bool connected = false;
         int amountConnected = 0;
-
+        byte clickedTimes = 0;
+        int clickDelay;
+        #endregion
         public MainWindow()
         {
             InitializeComponent();
+
+            MessageDelay.Visibility = Visibility.Hidden;
+
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(1000);
+            timer.Tick += timer_Tick;
+            timer.Start();
         }
+
         public MainWindow(string username)
         {
             InitializeComponent();
             this.userName = username;
+            MessageDelay.Visibility = Visibility.Hidden;
+
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(1000);
+            timer.Tick += timer_Tick;
+            timer.Start();
+
         }
+
+        /// <summary>
+        /// Gets called once a sec
+        /// </summary>
+        void timer_Tick(object sender, EventArgs e)
+        {
+            clickDelay++;
+        }
+
         private void ConnectServer(object sender, RoutedEventArgs e)
         {
             // Stops from connecting multible times
@@ -36,7 +62,7 @@ namespace WpfClient
                 return;
 
             // Initialize our connection to serwer
-            clientSide.Initialize();
+            MessageBox.Show(clientSide.Initialize());
             clientSide.MessageRecived += ReceiveData;
 
             connected = true;
@@ -48,14 +74,39 @@ namespace WpfClient
             if (connected == false)
                 return;
 
-            if (path == string.Empty)
-                clientSide.SendMessage(InputMessage.Text, userName);
+            #region Click Delay
+            clickedTimes++;
+            if (clickedTimes > 5)
+            {
+                MessageDelay.Visibility = Visibility.Visible;
+                if (clickDelay <= 3)
+                {
+                    return;
+                }
+                clickedTimes = 0;
+                MessageDelay.Visibility = Visibility.Hidden;
+            }
             else
             {
-                clientSide.SendMessage(InputMessage.Text, userName,path, fileName);
-                path = "";
-                file = "";
-                fileName = "";
+                clickDelay = 0;
+            }
+            #endregion
+
+            if (path == string.Empty)
+            {
+                clientSide.SendMessage(InputMessage.Text, userName);
+                path = string.Empty;
+                file = string.Empty;
+                fileName = string.Empty;
+            }
+            else
+            {
+                if (clientSide.SendMessage(InputMessage.Text, userName, path, fileName) == "Fail")
+                    MessageBox.Show("File To Big");
+
+                path = string.Empty;
+                file = string.Empty;
+                fileName = string.Empty;
             }
         }
 
@@ -64,18 +115,19 @@ namespace WpfClient
             if (connected == false)
                 return;
 
+            Test data;
             string temp = "";
 
-            // Receive values from serwer  
             if (e.File.Length == 0)
             {
                 temp = string.Format("{0} by user {1}: {2}", e.Time, e.Name, e.Message);
+                data = new NormalMessage() { IsHighlighted = false, Name = temp };
             }
             else
             {
                 file = e.File;
-                //OutputMessage.Foreground = Brushes.Blue;
-                temp = string.Format("{0} {1} send file {2} with message {3}", e.Time, e.Name,e.FileName, e.Message);
+                temp = string.Format("{0} {1} send file {2} with message {3}", e.Time, e.Name, e.FileName, e.Message);
+                data = new GotFile() { IsHighlighted = true, Name = temp };
             }
 
             // Update list from another thread 
@@ -83,9 +135,7 @@ namespace WpfClient
             {
                 // Insert item on top of the list
                 lock (_lock)
-                    OutputMessage.Items.Insert(0, temp);
-
-              
+                    OutputMessage.Items.Insert(0, data);
             }));
         }
 
@@ -99,22 +149,38 @@ namespace WpfClient
                 path = op.FileName;
                 fileName = System.IO.Path.GetFileName(path);
             }
-            
         }
 
+        /// <summary>
+        /// Gets selected item from the list
+        /// </summary>
         private void Selected(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-
             string temp = OutputMessage.SelectedItem.ToString();
-            if (temp.Contains("file"))
+            if (temp.Contains("GotFile"))
             {
                 byte[] buffer = Convert.FromBase64String(file);
                 SaveFileDialog save = new SaveFileDialog();
                 save.Filter = "Exe file |*.exe";
                 if (save.ShowDialog() == true)
-                    File.WriteAllBytes(save.FileName,buffer);
+                    System.IO.File.WriteAllBytes(save.FileName, buffer);
             }
-
         }
     }
+
+    #region Color Selector
+    public class GotFile : Test
+    {
+
+    }
+    public class NormalMessage : Test
+    {
+
+    }
+    public class Test
+    {
+        public string Name { get; set; }
+        public bool IsHighlighted { get; set; }
+    }
+    #endregion
 }
