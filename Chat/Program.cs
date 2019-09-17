@@ -44,7 +44,7 @@ namespace Chat
             while (true)
             {
                 NetworkStream stream = client.GetStream();
-                byte[] buffer = new byte[32768];
+                byte[] buffer = new byte[154624];
                 int byte_count;
 
                 try

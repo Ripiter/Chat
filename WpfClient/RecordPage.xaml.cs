@@ -4,9 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace WpfClient
@@ -19,6 +17,9 @@ namespace WpfClient
         private bool recorded = false;
         private bool recording = false;
         public bool Recorded { get => recorded; set => recorded = value; }
+        public byte[] SoundByte { get => soundByte; set => soundByte = value; }
+
+        byte[] soundByte;
 
         [DllImport("winmm.dll", EntryPoint = "mciSendStringA", CharSet = CharSet.Ansi, SetLastError = true, ExactSpelling = true)]
         private static extern int mciSendString(string lpstrCommand, string lpstrReturnString, int uReturnLength, int hwndCallback);
@@ -35,13 +36,13 @@ namespace WpfClient
 
             timer.Interval = TimeSpan.FromMilliseconds(1000);
             timer.Tick += timer_Tick;
-            
+
         }
         void timer_Tick(object sender, EventArgs e)
         {
             recordingLenght++;
             Debug.WriteLine(recordingLenght);
-            recordingLabel.Content = string.Format("Recording: {0}",recordingLenght);
+            recordingLabel.Content = string.Format("Recording: {0}", recordingLenght);
             if (recordingLenght == 10)
                 StopRecordningMethod();
         }
@@ -59,6 +60,9 @@ namespace WpfClient
 
         private void StopRecording(object sender, RoutedEventArgs e)
         {
+            if (recording == false)
+                return;
+
             StopRecordningMethod();
         }
 
@@ -67,12 +71,12 @@ namespace WpfClient
             if (recording == true)
                 return;
 
-            byte[] soundByte = File.ReadAllBytes(path + "result.wav");
+            SoundByte = File.ReadAllBytes(path + "result.wav");
 
-            if (soundByte.Length == 0)
+            if (SoundByte.Length == 0)
                 return;
 
-            using (MemoryStream ms = new MemoryStream(soundByte))
+            using (MemoryStream ms = new MemoryStream(SoundByte))
             {
                 SoundPlayer player = new SoundPlayer(ms);
 
@@ -82,14 +86,21 @@ namespace WpfClient
 
         private void StopRecordningMethod()
         {
-            recording = false;
-            Recorded = true;
-            timer.Stop();
-            recordingLenght = 0;
-            recordingLenght = 0;
-            recordingLabel.Visibility = Visibility.Hidden;
-            mciSendString("save recsound " + path + "result.wav", "", 0, 0);
-            mciSendString("close recsound ", "", 0, 0);
+            try
+            {
+                recording = false;
+                Recorded = true;
+                timer.Stop();
+                recordingLenght = 0;
+                recordingLabel.Visibility = Visibility.Hidden;
+                mciSendString("save recsound " + path + "result.wav", "", 0, 0);
+                mciSendString("close recsound ", "", 0, 0);
+                SoundByte = File.ReadAllBytes(path + "result.wav");
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
         }
     }
 }

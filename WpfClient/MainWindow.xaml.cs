@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Media;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -13,6 +15,7 @@ namespace WpfClient
     {
         ClientSide clientSide = new ClientSide();
         static readonly object _lock = new object();
+        RecordPage recordPage;
         #region Variables 
         string userName = "";
         string path = "";
@@ -93,21 +96,31 @@ namespace WpfClient
             }
             #endregion
 
-            if (path == string.Empty)
+            if (path == string.Empty && recordPage.Recorded == false)
             {
                 clientSide.SendMessage(InputMessage.Text, userName);
                 path = string.Empty;
                 file = string.Empty;
                 fileName = string.Empty;
             }
-            else
+            else if(recordPage.Recorded == false)
             {
-                if (clientSide.SendMessage(InputMessage.Text, userName, path, fileName) == "Fail")
+                if (clientSide.SendFile(InputMessage.Text, userName, path, fileName) == "Fail")
                     MessageBox.Show("File To Big");
 
                 path = string.Empty;
                 file = string.Empty;
                 fileName = string.Empty;
+            }
+            else
+            {
+                if (clientSide.SendVoiceMessage(InputMessage.Text, userName, recordPage.SoundByte, fileName) == "Fail")
+                    MessageBox.Show("File To Big");
+
+                path = string.Empty;
+                file = string.Empty;
+                fileName = string.Empty;
+                recordPage.Recorded = false;
             }
         }
 
@@ -115,20 +128,26 @@ namespace WpfClient
         {
             if (connected == false)
                 return;
-
-            Test data;
+           
+            Test data = null;
             string temp = "";
 
             if (e.File.Length == 0)
             {
                 temp = string.Format("{0} by user {1}: {2}", e.Time, e.Name, e.Message);
-                data = new NormalMessage() { IsHighlighted = false, Name = temp };
+                data = new NormalMessage() { SpecialMessage = "Normal", Name = temp };
             }
-            else
+            else if(e.FileName.Contains(".exe"))
             {
                 file = e.File;
                 temp = string.Format("{0} {1} send file {2} with message {3}", e.Time, e.Name, e.FileName, e.Message);
-                data = new GotFile() { IsHighlighted = true, Name = temp };
+                data = new GotFile() { SpecialMessage = "File", Name = temp };
+            }
+            else if (e.FileName.Contains("sound"))
+            {
+                file = e.File;
+                temp = string.Format("{0} {1} send voice message {2} with message {3}", e.Time, e.Name, e.FileName, e.Message);
+                data = new VoiceMessage() { SpecialMessage = "Voice", Name = temp };
             }
 
             // Update list from another thread 
@@ -166,11 +185,25 @@ namespace WpfClient
                 if (save.ShowDialog() == true)
                     System.IO.File.WriteAllBytes(save.FileName, buffer);
             }
+            else if (temp.Contains("VoiceMessage"))
+            {
+                byte[] buffer = Convert.FromBase64String(file);
+
+                if (buffer.Length == 0)
+                    return;
+
+                using (MemoryStream ms = new MemoryStream(buffer))
+                {
+                    SoundPlayer player = new SoundPlayer(ms);
+
+                    player.Play();
+                }
+            }
         }
 
         private void OpenRecordMenu(object sender, RoutedEventArgs e)
         {
-            RecordPage recordPage = new RecordPage();
+            recordPage = new RecordPage();
             recordPage.Show();
         }
     }
@@ -184,10 +217,14 @@ namespace WpfClient
     {
 
     }
+    public class VoiceMessage : Test
+    {
+
+    }
     public class Test
     {
         public string Name { get; set; }
-        public bool IsHighlighted { get; set; }
+        public string SpecialMessage { get; set; }
     }
     #endregion
 }

@@ -11,11 +11,14 @@
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                        <DataTrigger Binding="{Binding SpecialMessage}" Value="File">
                             <Setter Property="Foreground" Value="Blue"></Setter>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsHighlighted}" Value="False">
+                        <DataTrigger Binding="{Binding SpecialMessage}" Value="Normal">
                             <Setter Property="Foreground" Value="Black"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SpecialMessage}" Value="Voice">
+                            <Setter Property="Foreground" Value="DarkGreen"></Setter>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

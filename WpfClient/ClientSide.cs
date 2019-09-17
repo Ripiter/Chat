@@ -60,7 +60,7 @@ namespace WpfClient
         /// <summary>
         /// Sends message with a file
         /// </summary>
-        public string SendMessage(string text,string userName,string filePath, string fileName)
+        public string SendFile(string text,string userName,string filePath, string fileName)
         {
             // Create byte[] of the program from the path
             byte[] fileBuffer = File.ReadAllBytes(filePath);    
@@ -87,13 +87,41 @@ namespace WpfClient
 
             return "Success";
         }
+
+        public string SendVoiceMessage(string text, string userName, byte[] file, string fileName)
+        {
+            // Create base64 string to send over with xml file
+            string base64Enc = Convert.ToBase64String(file);
+
+            // Getting byte[] from xml
+            Encoding encoding = Encoding.ASCII;
+            XElement element = new XElement("Root",
+                             new XElement("Name", userName),
+                             new XElement("Message", text),
+                             new XElement("File", base64Enc),
+                             new XElement("FileName", "sound"),
+                             new XElement("Time", DateTime.Now.ToString("t")));
+
+            byte[] buffer = ConvertXmlToByteArray(element, encoding);
+
+            // Check if file isnt to big 
+            if (file.Length > 152564)
+                return "Fail";
+            // Sending byte[] to serwer
+            ns.Write(buffer, 0, buffer.Length);
+
+            return "Success";
+        }
+
+
+
         public void GetMessages(TcpClient client)
         {
             HoldingVariable values = new HoldingVariable();
             NetworkStream ns = client.GetStream();
             XmlDocument el;
             
-            byte[] receivedBytes = new byte[32768];
+            byte[] receivedBytes = new byte[154624];
             int byte_count;
             while ((byte_count = ns.Read(receivedBytes, 0, receivedBytes.Length)) > 0)
             {
