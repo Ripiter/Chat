@@ -29,6 +29,7 @@ namespace WpfClient
         public MainWindow()
         {
             InitializeComponent();
+            recordPage = new RecordPage();
 
             MessageDelay.Visibility = Visibility.Hidden;
 
@@ -41,6 +42,7 @@ namespace WpfClient
         public MainWindow(string username)
         {
             InitializeComponent();
+            recordPage = new RecordPage();
             this.userName = username;
             MessageDelay.Visibility = Visibility.Hidden;
 
@@ -141,13 +143,13 @@ namespace WpfClient
             {
                 file = e.File;
                 temp = string.Format("{0} {1} send file {2} with message {3}", e.Time, e.Name, e.FileName, e.Message);
-                data = new GotFile() { SpecialMessage = "File", Name = temp };
+                data = new GotFile() { SpecialMessage = "File", Name = temp, File = e.File };
             }
             else if (e.FileName.Contains("sound"))
             {
                 file = e.File;
                 temp = string.Format("{0} {1} send voice message {2} with message {3}", e.Time, e.Name, e.FileName, e.Message);
-                data = new VoiceMessage() { SpecialMessage = "Voice", Name = temp };
+                data = new VoiceMessage() { SpecialMessage = "Voice", Name = temp, File = e.File };
             }
 
             // Update list from another thread 
@@ -167,7 +169,7 @@ namespace WpfClient
             if (op.ShowDialog() == true)
             {
                 path = op.FileName;
-                fileName = System.IO.Path.GetFileName(path);
+                fileName = Path.GetFileName(path);
             }
         }
 
@@ -177,9 +179,10 @@ namespace WpfClient
         private void Selected(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             string temp = OutputMessage.SelectedItem.ToString();
+            Test a = (Test)OutputMessage.SelectedItem;
             if (temp.Contains("GotFile"))
             {
-                byte[] buffer = Convert.FromBase64String(file);
+                byte[] buffer = Convert.FromBase64String(a.File);
                 SaveFileDialog save = new SaveFileDialog();
                 save.Filter = "Exe file |*.exe";
                 if (save.ShowDialog() == true)
@@ -187,7 +190,7 @@ namespace WpfClient
             }
             else if (temp.Contains("VoiceMessage"))
             {
-                byte[] buffer = Convert.FromBase64String(file);
+                byte[] buffer = Convert.FromBase64String(a.File);
 
                 if (buffer.Length == 0)
                     return;
@@ -219,12 +222,13 @@ namespace WpfClient
     }
     public class VoiceMessage : Test
     {
-
+       
     }
     public class Test
     {
         public string Name { get; set; }
         public string SpecialMessage { get; set; }
+        public string File { get; set; }
     }
     #endregion
 }

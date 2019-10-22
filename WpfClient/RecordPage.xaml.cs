@@ -5,6 +5,7 @@ using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace WpfClient
@@ -79,7 +80,7 @@ namespace WpfClient
             using (MemoryStream ms = new MemoryStream(SoundByte))
             {
                 SoundPlayer player = new SoundPlayer(ms);
-
+                
                 player.Play();
             }
         }

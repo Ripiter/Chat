@@ -17,7 +17,7 @@ namespace Chat
         {
             Console.WriteLine("Server Started");
             int count = 1;
-            IPAddress ip = IPAddress.Parse("10.109.169.64");
+            IPAddress ip = IPAddress.Parse("10.109.169.86");
             TcpListener ServerSocket = new TcpListener(ip, 5000);
             ServerSocket.Start();
 

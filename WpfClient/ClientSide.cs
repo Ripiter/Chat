@@ -19,7 +19,7 @@ namespace WpfClient
             string message;
             // To do: add box to add custom ip
             // Ip of the server
-            IPAddress ip = IPAddress.Parse("10.109.169.64");
+            IPAddress ip = IPAddress.Parse("10.109.169.86");
             int port = 5000;
             TcpClient client = new TcpClient();
 
